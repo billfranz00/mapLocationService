@@ -39,6 +39,7 @@
             // map.drawLinesBetweenMarkers({ lat: 37.7397, lng: -121.4252 }, { lat: 38.7397, lng: -121.4252 });
             // map.drawLinesBetweenMarkers({lat: tracy.Latitude, lng: tracy.Longitude}, {lat: manteca.Latitude, lng: manteca.Longitude}, {lat: modesto.Latitude, lng: modesto.Longitude}); // connects all the dots to any markers that exist on the map.
             map.drawLinesBetweenMarkers(this.markers);
+            map.drawRoute(manteca, modesto);
         },
         methods: {
             async injectLocation(location) {

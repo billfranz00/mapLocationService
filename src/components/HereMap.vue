@@ -18,6 +18,7 @@
             return {
                 platform: {},
                 map: {}
+                // mapCenter: { lat: 37.7397, lng: -121.4252 }
             };
         },
         created() {
@@ -27,17 +28,40 @@
                 "app_code": this.hereApp.code
             });
             this.geocoder = this.platform.getGeocodingService();
+            this.router = this.platform.getRoutingService();
         },
-        mounted() {
+       async mounted() {
+
             // Replace the map placeholder with a map...
             this.map = new H.Map( // Replaces the placeolder HTML element
                 this.$refs.map,
                 this.platform.createDefaultLayers().normal.map,
                 {
-                    zoom: 10,
-                    center: { lat: 37.7397, lng: -121.4252 }
+                    zoom: 10
                 }
             );
+
+            function getCoordinates() {
+                if(navigator.geolocation) {
+                    return new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(position => {
+                            if(position.coords.latitude && position.coords.longitude) {
+                                resolve({ lat: position.coords.latitude, lng: position.coords.longitude});    
+                            } else {
+                                console.log("No Coordinates Found");
+                                reject({ lat: 37.7397, lng: -121.4252 });
+                            }
+                        });
+                    });
+                } else {
+                    console.log("Couldn't Locate Current Position");
+                    return { lat: 37.7397, lng: -121.4252 };
+                }
+            }
+
+            let mapCenter = await getCoordinates();
+
+            this.map.setCenter(mapCenter);
 
             // this.dropMarker(37.7397, -121.4252);
         },
@@ -73,6 +97,35 @@
                     }, error => {
                         reject(error);
                     });
+                });
+            },
+            // drawRoute(start, finish) {
+            drawRoute(...waypoints) {
+                let waypointObj = {};
+                waypoints.forEach((waypoint, index) => {
+                    waypointObj["waypoint" + index] = "geo!" + waypoint.Latitude + "," + waypoint.Longitude
+                });
+                let params = {
+                    "mode": "fastest;car",
+                    ...waypointObj,
+                    "representation": "display"
+                };
+                this.router.calculateRoute(params, data => {
+                    if (data.response) {
+                        console.log(data);
+                        data = data.response.route[0];
+                        let lineString = new H.geo.LineString();
+                        data.shape.forEach(point => {
+                            let parts = point.split(",");
+                            lineString.pushLatLngAlt(parts[0], parts[1]);
+                        });
+                        let routeLine = new H.map.Polyline(lineString, {
+                            style: { strokeColor: "blue", lineWidth: 5 }
+                        });
+                        this.map.addObjects([routeLine]);
+                    }
+                }, error => {
+                    console.error(error);
                 });
             }
         }

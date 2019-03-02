@@ -1,7 +1,7 @@
 <template>
     <div class="locations">
         <h1>Your Locations</h1>
-        <input type="text" name="location" v-model="location">
+        <input type="text" name="location" v-model="location" @keyup.enter="addLocation">
         <button @click="addLocation">Add Location</button>
         <ol>
             <li>{{ NumberOne }}</li>
@@ -35,6 +35,7 @@
             addLocation() {
                 let location = this.location;
                 this.$emit("addLocation", location);
+                this.location = "";
             }
         }
     }
